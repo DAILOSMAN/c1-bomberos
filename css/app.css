@@ -345,7 +345,8 @@ textarea { min-height: 150px; font-family: ui-monospace, SFMono-Regular, Menlo, 
 
 /* ---------- pie ---------- */
 
-.pie { text-align: center; color: var(--txt-sec); font-size: 12px; padding: 20px 16px 40px; }
+.pie { text-align: center; color: var(--txt-sec); font-size: 12px; padding: 20px 16px 40px; line-height: 1.7; }
+.pie strong { color: var(--txt); font-size: 13px; letter-spacing: .01em; }
 
 /* ---------- movil ---------- */
 
