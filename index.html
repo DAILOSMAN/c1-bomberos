@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Test C1 Bomberos · Las Palmas de Gran Canaria</title>
+<meta name="description" content="Aplicación de test para la promoción interna a Bombero/a Especialista C1 del Ayuntamiento de Las Palmas de Gran Canaria.">
+<meta name="theme-color" content="#e35205">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="C1 Bomberos">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<header class="cabecera">
+  <div class="cabecera-in">
+    <div class="marca">
+      <div class="marca-logo">C1</div>
+      <div class="marca-txt">
+        <strong>Test C1 Bomberos</strong>
+        <span>Bombero/a Especialista · Las Palmas de G.C.</span>
+      </div>
+    </div>
+    <div class="cabecera-acc">
+      <button class="btn icono pequeno" id="btn-tema" title="Cambiar tema claro/oscuro" aria-label="Cambiar tema">◐</button>
+    </div>
+  </div>
+</header>
+
+<nav class="nav" id="nav">
+  <div class="nav-in">
+    <button data-vista="inicio" class="activo">Inicio</button>
+    <button data-vista="test">Hacer test</button>
+    <button data-vista="estadisticas">Progreso</button>
+    <button data-vista="banco">Preguntas</button>
+    <button data-vista="importar">Importar</button>
+    <button data-vista="ajustes">Ajustes</button>
+  </div>
+</nav>
+
+<main>
+
+<!-- ============ INICIO ============ -->
+<section class="vista activa" id="v-inicio">
+  <div id="aviso-sin-preguntas"></div>
+  <div id="aviso-en-curso"></div>
+
+  <div class="rejilla c4" style="margin-bottom:14px">
+    <div class="metrica"><div class="val" id="m-banco">0</div><div class="et">Preguntas</div></div>
+    <div class="metrica acento"><div class="val" id="m-cobertura">0%</div><div class="et">Vistas</div></div>
+    <div class="metrica bien"><div class="val" id="m-tasa">—</div><div class="et">Aciertos</div></div>
+    <div class="metrica"><div class="val" id="m-racha">0</div><div class="et">Días seguidos</div></div>
+  </div>
+
+  <div class="tarjeta">
+    <h2>Empezar ahora</h2>
+    <p class="sub">Simulacro oficial: 40 preguntas, 3 opciones, 60 minutos, 0,15 puntos por acierto y sin penalizar fallos ni blancos. Apruebas con 20 aciertos.</p>
+    <div class="btn-fila">
+      <button class="btn pri" data-lanzar="examen">Simulacro de examen</button>
+      <button class="btn" data-lanzar="falladas">Repasar falladas <span id="cnt-falladas" class="etiqueta"></span></button>
+      <button class="btn" data-lanzar="repaso">Repaso programado <span id="cnt-repaso" class="etiqueta"></span></button>
+      <button class="btn" data-lanzar="nuevas">Preguntas nuevas</button>
+      <button class="btn" data-vista-ir="test">Test a medida</button>
+    </div>
+  </div>
+
+  <div class="rejilla c2">
+    <div class="tarjeta">
+      <h3>Curva de progresión</h3>
+      <canvas id="g-inicio" data-alto="190"></canvas>
+      <p class="sub" style="margin:10px 0 0" id="txt-prediccion"></p>
+    </div>
+    <div class="tarjeta">
+      <h3>Cómo llevas cada tema</h3>
+      <canvas id="g-inicio-temas" data-alto="190"></canvas>
+      <p class="sub" style="margin:10px 0 0">Porcentaje de aciertos por tema del Anexo III. Las barras grises son temas que aún no has tocado.</p>
+    </div>
+  </div>
+
+  <div class="tarjeta">
+    <h3>Últimos tests</h3>
+    <div id="ultimos-intentos"></div>
+  </div>
+
+  <div class="tarjeta">
+    <h3>La convocatoria de un vistazo</h3>
+    <div class="tabla-scroll">
+      <table class="tabla" id="tabla-oposicion"></table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONFIGURAR TEST ============ -->
+<section class="vista" id="v-test">
+  <div class="tarjeta">
+    <h2>Test a medida</h2>
+    <p class="sub">Elige de dónde salen las preguntas y cómo quieres responderlas.</p>
+
+    <label class="campo">
+      <span>Tipo de test</span>
+      <select id="cfg-modo">
+        <option value="examen">Simulacro oficial (40 preguntas · 60 min)</option>
+        <option value="libre">Test libre</option>
+        <option value="falladas">Solo las que he fallado</option>
+        <option value="nuevas">Solo las que no he visto</option>
+        <option value="marcadas">Solo las marcadas</option>
+        <option value="repaso">Repaso programado (Leitner)</option>
+      </select>
+    </label>
+
+    <div class="rejilla c2">
+      <label class="campo" id="campo-num">
+        <span>Número de preguntas</span>
+        <input type="number" id="cfg-num" value="20" min="1" max="500">
+      </label>
+      <label class="campo" id="campo-min">
+        <span>Límite de tiempo (minutos, 0 = sin límite)</span>
+        <input type="number" id="cfg-min" value="0" min="0" max="300">
+      </label>
+    </div>
+
+    <label class="check"><input type="checkbox" id="cfg-feedback" checked> <span>Corregir cada pregunta al momento</span></label>
+    <label class="check"><input type="checkbox" id="cfg-barajar" checked> <span>Barajar el orden de las respuestas</span></label>
+    <label class="check"><input type="checkbox" id="cfg-oficiales"> <span>Solo preguntas oficiales (batería del Portal de Transparencia)</span></label>
+    <label class="check" id="check-reserva"><input type="checkbox" id="cfg-reserva"> <span>Añadir las 5 preguntas de reserva (45 en total, puntúan 40)</span></label>
+
+    <h3 style="margin-top:18px">Temas</h3>
+    <div class="btn-fila" style="margin-bottom:10px">
+      <button class="btn pequeno" id="temas-todos">Todos</button>
+      <button class="btn pequeno" id="temas-ninguno">Ninguno</button>
+      <button class="btn pequeno" id="temas-comunes">Solo parte común</button>
+      <button class="btn pequeno" id="temas-especificos">Solo parte específica</button>
+      <button class="btn pequeno" id="temas-flojos">Mis temas flojos</button>
+    </div>
+    <div class="temas-lista" id="cfg-temas"></div>
+
+    <div style="margin-top:18px">
+      <div class="aviso-caja neutro" id="cfg-resumen"></div>
+      <button class="btn pri ancho" id="btn-empezar">Empezar test</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SESION ============ -->
+<section class="vista" id="v-sesion">
+  <div class="test-barra">
+    <div class="test-barra-in">
+      <span class="crono" id="crono">--:--</span>
+      <span class="progreso-txt" id="progreso-txt">0 / 0</span>
+      <div style="flex:1;min-width:80px"><div class="barra-fondo"><div id="barra-sesion" style="width:0%"></div></div></div>
+      <button class="btn pequeno" id="btn-terminar">Terminar</button>
+      <button class="btn pequeno peligro" id="btn-abandonar">Salir</button>
+    </div>
+  </div>
+
+  <div class="pregunta-caja">
+    <div class="pregunta-meta" id="pregunta-meta"></div>
+    <p class="enunciado" id="enunciado"></p>
+    <div class="opciones" id="opciones"></div>
+    <div id="feedback"></div>
+  </div>
+
+  <div class="nav-test">
+    <button class="btn aux" id="btn-anterior">◀</button>
+    <button class="btn aux" id="btn-dudosa" title="Marcar como dudosa">☆ Dudosa</button>
+    <button class="btn pri" id="btn-siguiente">Siguiente ▶</button>
+  </div>
+
+  <div class="tarjeta" style="margin-top:16px">
+    <h3>Mapa de la prueba</h3>
+    <div class="mapa" id="mapa"></div>
+  </div>
+</section>
+
+<!-- ============ RESULTADO ============ -->
+<section class="vista" id="v-resultado">
+  <div id="resultado-cuerpo"></div>
+</section>
+
+<!-- ============ ESTADISTICAS ============ -->
+<section class="vista" id="v-estadisticas">
+  <div class="rejilla c4" style="margin-bottom:14px">
+    <div class="metrica"><div class="val" id="e-tests">0</div><div class="et">Tests hechos</div></div>
+    <div class="metrica acento"><div class="val" id="e-preguntas">0</div><div class="et">Respuestas dadas</div></div>
+    <div class="metrica bien"><div class="val" id="e-dominadas">0</div><div class="et">Dominadas</div></div>
+    <div class="metrica mal"><div class="val" id="e-flojas">0</div><div class="et">Flojas</div></div>
+  </div>
+
+  <div class="tarjeta">
+    <h3>Curva de progresión</h3>
+    <label class="check" style="margin-bottom:10px"><input type="checkbox" id="e-solo-examenes" checked> <span>Solo simulacros de examen</span></label>
+    <canvas id="g-progresion" data-alto="250"></canvas>
+    <p class="sub" style="margin:10px 0 0">Escala oficial de 0 a 6 puntos. La línea verde discontinua es el 3 de corte; la gris, la media de los tres últimos.</p>
+  </div>
+
+  <div class="rejilla c2">
+    <div class="tarjeta">
+      <h3>Dominio del banco</h3>
+      <canvas id="g-dominio" data-alto="90"></canvas>
+      <p class="sub" style="margin:14px 0 0">Cada pregunta sube de caja al acertarla y vuelve a la 1 al fallarla. Caja 5 = asentada.</p>
+    </div>
+    <div class="tarjeta">
+      <h3>Actividad (30 días)</h3>
+      <canvas id="g-actividad" data-alto="120"></canvas>
+      <p class="sub" style="margin:14px 0 0" id="txt-racha"></p>
+    </div>
+  </div>
+
+  <div class="tarjeta">
+    <h3>Rendimiento por tema</h3>
+    <div class="tabla-scroll"><table class="tabla" id="tabla-temas"></table></div>
+  </div>
+
+  <div class="tarjeta">
+    <h3>Calculadora de nota final</h3>
+    <p class="sub">La oposición vale 6 puntos y el concurso 4. Hay que sacar 3 en el test y sumar 5 en total.</p>
+    <div class="rejilla c2">
+      <label class="campo"><span>Aciertos previstos en el test (sobre 40)</span><input type="number" id="calc-aciertos" value="28" min="0" max="40"></label>
+      <label class="campo"><span>Puntos estimados del concurso (sobre 4)</span><input type="number" id="calc-concurso" value="2" min="0" max="4" step="0.01"></label>
+    </div>
+    <div id="calc-salida"></div>
+    <details style="margin-top:12px">
+      <summary style="cursor:pointer;font-size:13.5px;color:var(--txt-sec)">Ver el baremo del concurso</summary>
+      <div class="tabla-scroll" style="margin-top:10px"><table class="tabla" id="tabla-baremo"></table></div>
+    </details>
+  </div>
+
+  <div class="tarjeta">
+    <h3>Historial completo</h3>
+    <div class="tabla-scroll"><table class="tabla" id="tabla-historial"></table></div>
+  </div>
+</section>
+
+<!-- ============ BANCO ============ -->
+<section class="vista" id="v-banco">
+  <div class="tarjeta">
+    <h2>Banco de preguntas</h2>
+    <div class="rejilla c3" style="margin-bottom:12px">
+      <label class="campo" style="margin:0"><span>Buscar</span><input type="text" id="b-buscar" placeholder="Texto del enunciado..."></label>
+      <label class="campo" style="margin:0"><span>Tema</span><select id="b-tema"></select></label>
+      <label class="campo" style="margin:0"><span>Filtro</span>
+        <select id="b-filtro">
+          <option value="">Todas</option>
+          <option value="falladas">Falladas</option>
+          <option value="marcadas">Marcadas</option>
+          <option value="sinver">Sin ver</option>
+          <option value="dominadas">Dominadas</option>
+          <option value="oficiales">Oficiales</option>
+          <option value="sinclasificar">Sin clasificar</option>
+        </select>
+      </label>
+    </div>
+    <div class="btn-fila" style="margin-bottom:12px">
+      <button class="btn pequeno" id="b-nueva">+ Añadir pregunta</button>
+      <button class="btn pequeno" id="b-exportar">Exportar banco</button>
+      <button class="btn pequeno peligro" id="b-borrar-filtro">Borrar las mostradas</button>
+    </div>
+    <div id="b-conteo" class="sub"></div>
+    <div id="b-lista"></div>
+    <div class="btn-fila" style="margin-top:12px;justify-content:center">
+      <button class="btn" id="b-mas">Ver más</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ IMPORTAR ============ -->
+<section class="vista" id="v-importar">
+  <div class="tarjeta">
+    <h2>Importar preguntas</h2>
+    <p class="sub">Pega el texto tal cual te lo pasen o carga un fichero. Reconoce JSON, CSV y el formato normal de test (enunciado numerado, opciones a/b/c y la respuesta).</p>
+
+    <div class="btn-fila" style="margin-bottom:14px">
+      <label class="btn" style="cursor:pointer">
+        Cargar fichero…
+        <input type="file" id="imp-fichero" accept=".json,.csv,.txt,.tsv,text/*" class="oculto">
+      </label>
+      <button class="btn pequeno" id="imp-ejemplo">Ver formatos admitidos</button>
+    </div>
+
+    <label class="campo">
+      <span>Pega aquí las preguntas</span>
+      <textarea id="imp-texto" placeholder="1. ¿Cuántas clases de fuego recoge la norma UNE-EN 2?&#10;a) Tres&#10;b) Cinco&#10;c) Seis&#10;Respuesta: b&#10;&#10;2. ..."></textarea>
+    </label>
+
+    <div class="rejilla c2">
+      <label class="campo"><span>Tema por defecto (si el texto no lo dice)</span><select id="imp-tema"></select></label>
+      <label class="campo"><span>Origen</span>
+        <select id="imp-fuente">
+          <option value="propia">Propia / de apuntes</option>
+          <option value="oficial">Oficial (batería de 200 del Ayuntamiento)</option>
+        </select>
+      </label>
+    </div>
+
+    <button class="btn pri ancho" id="imp-analizar">Analizar</button>
+    <div id="imp-resultado" style="margin-top:14px"></div>
+  </div>
+
+  <div class="tarjeta">
+    <h3>Copia de seguridad</h3>
+    <p class="sub">Exporta todo para no perder el progreso, o pásale el banco a un compañero.</p>
+    <div class="btn-fila">
+      <button class="btn" id="exp-todo">Exportar todo (banco + progreso)</button>
+      <button class="btn" id="exp-banco">Exportar solo el banco</button>
+      <label class="btn" style="cursor:pointer">Restaurar copia…<input type="file" id="imp-copia" accept=".json" class="oculto"></label>
+    </div>
+  </div>
+</section>
+
+<!-- ============ AJUSTES ============ -->
+<section class="vista" id="v-ajustes">
+  <div class="tarjeta">
+    <h2>Ajustes</h2>
+    <label class="campo"><span>Tu nombre (solo se guarda en este dispositivo)</span><input type="text" id="aj-nombre" placeholder="Opcional"></label>
+    <label class="campo"><span>Tema visual</span>
+      <select id="aj-tema"><option value="auto">Automático</option><option value="claro">Claro</option><option value="oscuro">Oscuro</option></select>
+    </label>
+    <label class="campo"><span>Tamaño del texto</span>
+      <select id="aj-texto"><option value="normal">Normal</option><option value="grande">Grande</option><option value="enorme">Muy grande</option></select>
+    </label>
+    <label class="check"><input type="checkbox" id="aj-barajar"> <span>Barajar respuestas por defecto</span></label>
+    <label class="check"><input type="checkbox" id="aj-sonido"> <span>Avisos sonoros de tiempo en el simulacro</span></label>
+  </div>
+
+  <div class="tarjeta">
+    <h3>Datos</h3>
+    <p class="sub" id="aj-almacen"></p>
+    <div class="btn-fila">
+      <button class="btn peligro" id="aj-reiniciar">Reiniciar progreso (conserva preguntas)</button>
+      <button class="btn peligro" id="aj-borrar">Borrar absolutamente todo</button>
+    </div>
+  </div>
+
+  <div class="tarjeta">
+    <h3>Sobre la app</h3>
+    <p class="sub">Aplicación de estudio para la promoción interna a <strong>Bombero/a Especialista, subgrupo C1</strong>, Ayuntamiento de Las Palmas de Gran Canaria (108 plazas, BOP n.º 103 de 28/08/2026).</p>
+    <p class="sub">Funciona sin conexión y sin cuenta. Todo lo que respondes se queda en tu dispositivo: nadie más lo ve. Puedes copiártela y pasársela a quien quieras.</p>
+    <p class="sub"><strong>No es una publicación oficial.</strong> Ante cualquier duda mandan las bases publicadas en el Boletín Oficial de la Provincia.</p>
+    <div id="aj-instalar"></div>
+  </div>
+</section>
+
+</main>
+
+<div class="pie">Test C1 Bomberos · Uso libre entre compañeros del servicio</div>
+
+<div id="toast"></div>
+<div class="modal-fondo" id="modal-fondo"><div class="modal" id="modal"></div></div>
+
+<script src="js/temario.js"></script>
+<script src="js/store.js"></script>
+<script src="js/importer.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/stats.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>

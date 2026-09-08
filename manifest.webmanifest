@@ -1,0 +1,23 @@
+{
+  "name": "Test C1 Bomberos · Las Palmas de Gran Canaria",
+  "short_name": "C1 Bomberos",
+  "description": "Test de estudio para la promoción interna a Bombero/a Especialista C1 del Ayuntamiento de Las Palmas de Gran Canaria.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f4f5f7",
+  "theme_color": "#e35205",
+  "lang": "es",
+  "dir": "ltr",
+  "categories": ["education", "productivity"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Simulacro de examen", "short_name": "Simulacro", "url": "./index.html#examen" },
+    { "name": "Repasar falladas", "short_name": "Falladas", "url": "./index.html#falladas" }
+  ]
+}
