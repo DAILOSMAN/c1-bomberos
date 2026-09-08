@@ -8,23 +8,17 @@ android {
 
     defaultConfig {
         applicationId "io.github.dailosman.c1bomberos"
-        minSdk 24              // Android 7.0, cubre practicamente cualquier telefono en uso
+        minSdk 24
         targetSdk 34
-        // La compilacion automatica pasa un numero de version que sube solo,
-        // para que cada APK nuevo se instale encima del anterior.
         versionCode project.hasProperty('numeroVersion') ? project.numeroVersion.toInteger() : 1
         versionName project.hasProperty('nombreVersion') ? project.nombreVersion : "1.0"
-        resourceConfigurations += ['es']
     }
 
     lint {
-        abortOnError false
-        checkReleaseBuilds false
+        abortOnError = false
+        checkReleaseBuilds = false
     }
 
-    // Firma fija para que las actualizaciones se instalen encima sin desinstalar.
-    // Es la clave de depuracion estandar de Android: su contrasena es publica y
-    // no protege nada. Sirve solo para que todas las compilaciones coincidan.
     signingConfigs {
         comun {
             storeFile file('claves/reparto.keystore')
@@ -47,10 +41,6 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
-    }
-
-    packaging {
-        resources.excludes += ['META-INF/*.version', 'META-INF/*.kotlin_module']
     }
 }
 
