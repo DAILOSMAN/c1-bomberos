@@ -1,0 +1,79 @@
+name: Compilar APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'css/**'
+      - 'js/**'
+      - 'icons/**'
+      - 'manifest.webmanifest'
+      - 'sw.js'
+      - 'android/**'
+      - '.github/workflows/android.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Preparar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Preparar Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Meter la app web dentro del APK
+        run: |
+          set -e
+          destino=android/app/src/main/assets
+          rm -rf "$destino"
+          mkdir -p "$destino"
+          cp index.html manifest.webmanifest "$destino"/
+          cp -r css js icons "$destino"/
+          echo "Contenido empaquetado:"
+          find "$destino" -type f | sort
+
+      - name: Compilar
+        working-directory: android
+        run: |
+          gradle --no-daemon assembleRelease \
+            -PnumeroVersion=${{ github.run_number }} \
+            -PnombreVersion=1.0.${{ github.run_number }}
+
+      - name: Renombrar el APK
+        run: |
+          origen=$(find android/app/build/outputs/apk/release -name '*.apk' | head -1)
+          echo "APK generado: $origen"
+          cp "$origen" TestC1Bomberos.apk
+          ls -lh TestC1Bomberos.apk
+
+      - name: Guardarlo también como artefacto de la ejecución
+        uses: actions/upload-artifact@v4
+        with:
+          name: TestC1Bomberos-apk
+          path: TestC1Bomberos.apk
+          retention-days: 90
+
+      - name: Publicarlo en Releases con enlace fijo
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete ultima --yes --cleanup-tag || true
+          gh release create ultima TestC1Bomberos.apk \
+            --title "Test C1 Bomberos 1.0.${{ github.run_number }}" \
+            --latest \
+            --notes "APK listo para instalar en Android 7 o superior. Descarga el fichero TestC1Bomberos.apk y ábrelo en el móvil."
