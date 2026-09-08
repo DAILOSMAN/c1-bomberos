@@ -970,6 +970,13 @@
     try { return window.self !== window.top; } catch (e) { return true; }
   }
 
+  /* Cuando corre dentro de la app de Android, el guardado lo hace la propia
+     app: escribe en la carpeta Descargas del telefono. */
+  function puenteAndroid() {
+    return (typeof window.AndroidApp !== 'undefined' && window.AndroidApp &&
+      typeof window.AndroidApp.guardarFichero === 'function') ? window.AndroidApp : null;
+  }
+
   function copiaManual(nombre, contenido, motivo) {
     modal('<h3>' + esc(nombre) + '</h3>' +
       '<p class="sub">' + esc(motivo) + '</p>' +
@@ -991,6 +998,14 @@
   }
 
   function descargar(nombre, contenido) {
+    var and = puenteAndroid();
+    if (and) {
+      var res = '';
+      try { res = and.guardarFichero(nombre, contenido); } catch (e) { res = ''; }
+      if (res) { toast('Guardado en ' + res, 4500); return; }
+      copiaManual(nombre, contenido, 'No se ha podido escribir en Descargas. Copia el texto y guárdalo tú:');
+      return;
+    }
     if (enIframe()) {
       copiaManual(nombre, contenido,
         'Abierta dentro de otra página, el navegador no deja descargar ficheros. ' +
@@ -1269,6 +1284,27 @@
       } catch (e) {}
     }
   }
+
+  /* Boton fisico "atras" de Android. Devuelve true si la app lo ha usado
+     para algo; si devuelve false, la aplicacion se cierra. */
+  window.__atras = function () {
+    try {
+      if ($('#modal-fondo').classList.contains('ver')) { cerrarModal(); return true; }
+      if (sesion) { abandonar(); return true; }
+      if (!$('#v-inicio').classList.contains('activa')) { irA('inicio'); return true; }
+    } catch (e) {}
+    return false;
+  };
+
+  /* La app de Android avisa antes de irse a segundo plano para que no se
+     pierda nada de la sesion en curso. */
+  window.__guardar = function () {
+    try {
+      if (sesion) { acumularTiempo(); Store.ponerEnCurso(sesion); }
+      Store.guardarAhora();
+    } catch (e) {}
+    return true;
+  };
 
   /* ================= arranque ================= */
 

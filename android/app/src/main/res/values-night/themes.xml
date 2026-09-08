@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Tema.C1Bomberos" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/fondo_oscuro</item>
+        <item name="android:statusBarColor">@color/panel_oscuro</item>
+        <item name="android:navigationBarColor">@color/fondo_oscuro</item>
+    </style>
+</resources>

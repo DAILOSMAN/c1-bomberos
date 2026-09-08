@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Mismos valores que la hoja de estilo de la app web -->
+    <color name="acento">#E35205</color>
+    <color name="acento_oscuro">#B84204</color>
+    <color name="fondo_claro">#F4F5F7</color>
+    <color name="fondo_oscuro">#14171A</color>
+    <color name="panel_oscuro">#1C2025</color>
+    <color name="blanco">#FFFFFF</color>
+</resources>

@@ -58,20 +58,54 @@ fichero con todo dentro: se puede mandar por correo o WhatsApp tal cual.
 Para tenerla como una app de verdad, con su icono: ábrela en Edge o Chrome y usa
 *Configuración → Aplicaciones → Instalar este sitio como una aplicación*.
 
-### En Android
+### En Android: aplicación de verdad (APK)
 
-El móvil necesita una dirección web, no un fichero suelto. Dos formas:
+En la carpeta `android` está el proyecto de la app nativa. Es un APK normal: se
+instala, sale en el cajón de aplicaciones con su icono, se abre sin barra de
+navegador y **no depende de Chrome, Brave ni de ningún navegador**. Todo el
+contenido va dentro del propio APK, así que funciona sin cobertura desde el
+primer segundo.
 
-1. **La más rápida**: pasarles el enlace de la app publicada. Cada uno lo abre en
-   Chrome y, desde el menú de los tres puntos, *Añadir a pantalla de inicio*. Queda
-   con su icono y funciona sin cobertura.
-2. **Con dominio propio**: sube esta carpeta a un GitHub Pages (gratis, 5 minutos) y
-   reparte esa dirección. Así también se instala como app y además se actualiza sola
-   cuando subas preguntas nuevas.
+No hace falta Android Studio ni compilar nada en tu ordenador: el fichero
+`.github/workflows/android.yml` hace que **GitHub compile el APK solo** cada vez
+que subes un cambio, y lo deja para descargar en la pestaña *Releases* del
+repositorio, con un enlace fijo:
 
-Si a alguien le llega el fichero suelto por WhatsApp y lo abre desde el explorador de
-archivos, la app funciona, pero **el progreso puede no guardarse** entre sesiones.
-Para el móvil, mejor el enlace.
+```
+https://github.com/USUARIO/c1-bomberos/releases/download/ultima/TestC1Bomberos.apk
+```
+
+Ese enlace es el que se reparte por WhatsApp. Cada compañero lo abre en el móvil,
+Android le pedirá permiso la primera vez ("Instalar aplicaciones desconocidas") y
+listo.
+
+Detalles del proyecto Android:
+
+- No pide **ni un solo permiso**. No accede a internet, ni a contactos, ni a nada.
+- La app se sirve dentro del APK con `WebViewAssetLoader`, en un origen `https://`
+  interno. Eso es lo que hace que el progreso se guarde de verdad: con `file://`
+  Android trata cada arranque como un sitio distinto y tira el almacenamiento.
+- El botón físico de atrás está conectado a la app: cierra el diálogo abierto, sale
+  del test o vuelve al inicio, y solo cierra la app cuando ya no hay nada más.
+- Al exportar una copia de seguridad, el fichero va a la carpeta **Descargas** del
+  teléfono, sin pedir permisos.
+- Sigue el modo claro/oscuro del sistema.
+- Android 7 en adelante.
+- Se firma con `android/app/claves/reparto.keystore`, la clave de depuración estándar
+  (contraseña `android`, que es pública y no protege nada). Está ahí solo para que
+  todas las compilaciones lleven la misma firma y las actualizaciones se instalen
+  encima sin desinstalar. **No sirve para publicar en Google Play**: para eso hace
+  falta una clave privada de verdad, guardada como secreto del repositorio.
+
+### En Android: alternativa sin APK
+
+Si prefieres no repartir un APK, sube esta carpeta a GitHub Pages y pásales la
+dirección. Cada uno la abre en su navegador y usa *Añadir a pantalla de inicio*.
+Queda parecido, pero depende del navegador de cada uno.
+
+Lo que **no** conviene: mandar el fichero HTML suelto por WhatsApp para abrirlo en el
+móvil. Funciona, pero Android lo copia a una ruta distinta cada vez y se pierde el
+progreso. En Windows con doble clic sí va perfecto.
 
 ---
 
@@ -106,6 +140,8 @@ HTML, CSS y JavaScript sin librerías ni compilación. Cinco módulos:
 | `js/engine.js` | Selección de preguntas, sesión y corrección oficial |
 | `js/stats.js` | Métricas y gráficas en canvas |
 | `js/ui.js` | Interfaz |
+| `android/` | Proyecto de la app nativa (WebView sobre los assets del APK) |
+| `.github/workflows/` | Compilación automática del APK en GitHub |
 
 `python construir.py` genera `dist/C1_Bomberos.html` (todo en un fichero) y
 `dist/artifact_body.html` (para publicar como página web).
