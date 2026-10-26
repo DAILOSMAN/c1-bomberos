@@ -12,8 +12,44 @@
 <meta name="apple-mobile-web-app-title" content="C1 Bomberos">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
 <link rel="stylesheet" href="css/app.css">
+<script>
+/* Algunos sitios donde se publica esta pagina la meten dentro de otro
+   documento HTML. Cuando eso pasa, toda esta cabecera acaba colgando del
+   <body> de fuera y el navegador deja de ver el manifest, con lo que la app
+   ya no se puede anadir a la pantalla de inicio. Esto vuelve a colocar lo
+   imprescindible en la cabecera buena. Si la pagina se sirve tal cual (que
+   es lo normal) no hace nada, porque ya esta todo donde toca. */
+(function () {
+  var cab = document.head;
+  if (!cab) return;
+  var TITULO = 'Test C1 Bomberos \u00b7 Las Palmas de Gran Canaria';
+  if (!document.title) document.title = TITULO;
+  var piezas = [
+    ['link[rel="manifest"]', 'link', { rel: 'manifest', href: 'manifest.webmanifest' }],
+    ['meta[name="theme-color"]', 'meta', { name: 'theme-color', content: '#e35205' }],
+    ['meta[name="mobile-web-app-capable"]', 'meta', { name: 'mobile-web-app-capable', content: 'yes' }],
+    ['meta[name="apple-mobile-web-app-capable"]', 'meta', { name: 'apple-mobile-web-app-capable', content: 'yes' }],
+    ['meta[name="apple-mobile-web-app-status-bar-style"]', 'meta', { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' }],
+    ['meta[name="apple-mobile-web-app-title"]', 'meta', { name: 'apple-mobile-web-app-title', content: 'C1 Bomberos' }],
+    ['link[rel="apple-touch-icon"]', 'link', { rel: 'apple-touch-icon', sizes: '180x180', href: 'icons/apple-touch-icon.png' }],
+    ['link[rel="icon"]', 'link', { rel: 'icon', href: 'icons/icon-192.png' }]
+  ];
+  for (var i = 0; i < piezas.length; i++) {
+    if (cab.querySelector(piezas[i][0])) continue;
+    var el = document.createElement(piezas[i][1]), attrs = piezas[i][2];
+    for (var k in attrs) if (attrs.hasOwnProperty(k)) el.setAttribute(k, attrs[k]);
+    cab.appendChild(el);
+  }
+  /* El documento de fuera puede traer su propio fondo blanco y su
+     color-scheme fijo; los de la app mandan. */
+  try {
+    document.documentElement.style.background = '';
+    if (document.body) document.body.style.background = '';
+  } catch (e) {}
+})();
+</script>
 </head>
 <body>
 
@@ -104,7 +140,7 @@
     <label class="campo">
       <span>Tipo de test</span>
       <select id="cfg-modo">
-        <option value="examen">Simulacro oficial (40 preguntas · 60 min)</option>
+        <option value="examen">Simulacro aleatorio (40 preguntas · 60 min)</option>
         <option value="libre">Test libre</option>
         <option value="falladas">Solo las que he fallado</option>
         <option value="nuevas">Solo las que no he visto</option>
@@ -297,6 +333,10 @@
       </label>
     </div>
 
+    <div class="rejilla c2">
+      <label class="campo"><span>Documento de origen (opcional)</span><input id="imp-documento" type="text" placeholder="Nombre o enlace de la publicación"></label>
+      <label class="campo"><span>Versión de la plantilla (opcional)</span><input id="imp-version" type="text" placeholder="Fecha o versión de las respuestas"></label>
+    </div>
     <button class="btn pri ancho" id="imp-analizar">Analizar</button>
     <div id="imp-resultado" style="margin-top:14px"></div>
   </div>
@@ -306,6 +346,7 @@
     <p class="sub">Exporta todo para no perder el progreso, o pásale el banco a un compañero.</p>
     <div class="btn-fila">
       <button class="btn" id="exp-todo">Exportar todo (banco + progreso)</button>
+      <button class="btn" id="exp-previa">Exportar copia anterior a la última actualización oficial</button>
       <button class="btn" id="exp-banco">Exportar solo el banco</button>
       <label class="btn" style="cursor:pointer">Restaurar copia…<input type="file" id="imp-copia" accept=".json" class="oculto"></label>
     </div>

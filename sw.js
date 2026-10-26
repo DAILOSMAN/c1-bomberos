@@ -1,6 +1,6 @@
 /* Service worker: la app entera cacheada para funcionar sin conexion. */
 
-var CACHE = 'c1bomberos-v1';
+var CACHE = 'c1bomberos-v3';
 var FICHEROS = [
   './',
   './index.html',
@@ -13,7 +13,9 @@ var FICHEROS = [
   './js/ui.js',
   './manifest.webmanifest',
   './icons/icon-192.png',
-  './icons/icon-512.png'
+  './icons/icon-512.png',
+  './icons/icon-maskable-512.png',
+  './icons/apple-touch-icon.png'
 ];
 
 self.addEventListener('install', function (e) {
