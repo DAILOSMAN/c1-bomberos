@@ -1,8 +1,8 @@
 ==============================================
  ENTORNO
 ==============================================
-fecha:            08/09/2026 17:19:44 UTC
-ejecucion:        6
+fecha:            26/10/2026 16:19:46 UTC
+ejecucion:        7
 java:             openjdk version "17.0.20.1" 2026-08-18
 gradle:           Gradle 8.7
 ANDROID_HOME:     /usr/local/lib/android/sdk
@@ -73,51 +73,51 @@ Daemon will be stopped at the end of the build
 > Task :app:stripReleaseDebugSymbols NO-SOURCE
 > Task :app:extractReleaseNativeSymbolTables NO-SOURCE
 > Task :app:mergeReleaseNativeDebugMetadata NO-SOURCE
+> Task :app:javaPreCompileRelease
 > Task :app:checkReleaseDuplicateClasses
-> Task :app:javaPreCompileRelease FROM-CACHE
-> Task :app:generateReleaseResValues FROM-CACHE
+> Task :app:generateReleaseResValues
 > Task :app:checkReleaseAarMetadata
 > Task :app:mapReleaseSourceSetPaths
-> Task :app:generateReleaseResources FROM-CACHE
-> Task :app:mergeReleaseResources FROM-CACHE
-> Task :app:packageReleaseResources FROM-CACHE
-> Task :app:parseReleaseLocalResources FROM-CACHE
+> Task :app:generateReleaseResources
+> Task :app:packageReleaseResources
+> Task :app:mergeReleaseResources
 > Task :app:createReleaseCompatibleScreenManifests
-> Task :app:extractDeepLinksRelease FROM-CACHE
+> Task :app:extractDeepLinksRelease
+> Task :app:parseReleaseLocalResources
 > Task :app:processReleaseMainManifest
 > Task :app:processReleaseManifest
-> Task :app:desugarReleaseFileDependencies FROM-CACHE
+> Task :app:desugarReleaseFileDependencies
 > Task :app:mergeReleaseStartupProfile
-> Task :app:mergeExtDexRelease FROM-CACHE
+> Task :app:processReleaseManifestForPackage
 > Task :app:mergeReleaseArtProfile
 > Task :app:mergeReleaseShaders
 > Task :app:compileReleaseShaders NO-SOURCE
 > Task :app:generateReleaseAssets UP-TO-DATE
 > Task :app:mergeReleaseAssets
-> Task :app:processReleaseManifestForPackage
 > Task :app:compressReleaseAssets
 > Task :app:extractReleaseVersionControlInfo
 > Task :app:processReleaseJavaRes NO-SOURCE
+> Task :app:processReleaseResources
+> Task :app:mergeReleaseJavaResource
+> Task :app:mergeExtDexRelease
+> Task :app:compileReleaseJavaWithJavac
+> Task :app:dexBuilderRelease
+> Task :app:mergeReleaseGlobalSynthetics
 > Task :app:collectReleaseDependencies
 > Task :app:sdkReleaseDependencyData
 > Task :app:validateSigningRelease
 > Task :app:writeReleaseAppMetadata
 > Task :app:writeReleaseSigningConfigVersions
-> Task :app:mergeReleaseJavaResource
-> Task :app:processReleaseResources
-> Task :app:compileReleaseJavaWithJavac FROM-CACHE
-> Task :app:dexBuilderRelease FROM-CACHE
-> Task :app:mergeDexRelease FROM-CACHE
-> Task :app:mergeReleaseGlobalSynthetics FROM-CACHE
-> Task :app:compileReleaseArtProfile FROM-CACHE
 > Task :app:optimizeReleaseResources
+> Task :app:mergeDexRelease
+> Task :app:compileReleaseArtProfile
 > Task :app:packageRelease
 > Task :app:createReleaseApkListingFileRedirect
 > Task :app:assembleRelease
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/compilar-1788887989299.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/compilar-1793031594147.json
 
-BUILD SUCCESSFUL in 14s
-38 actionable tasks: 24 executed, 14 from cache
+BUILD SUCCESSFUL in 1m 13s
+38 actionable tasks: 38 executed
 
 ==============================================
  RESULTADO: success
