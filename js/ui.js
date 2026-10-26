@@ -292,8 +292,8 @@
     } else if (disp < pedidas) {
       caja.className = 'aviso-caja neutro';
       caja.innerHTML = 'Disponibles: <strong>' + disp + '</strong>. Se usarán todas (pediste ' + pedidas + ').' +
-        (modo === 'examen' ? ' El simulacro no será representativo hasta que tengas al menos 40.' : '');
-      btn.disabled = false;
+        (modo === 'examen' ? ' Necesitas ' + pedidas + ' para el simulacro. Puedes usar Test libre.' : '');
+      btn.disabled = modo === 'examen';
     } else {
       caja.className = 'aviso-caja ok';
       caja.innerHTML = 'Disponibles: <strong>' + disp + '</strong>. Se sortearán <strong>' + pedidas + '</strong>.';
@@ -313,7 +313,7 @@
     }, extra || {});
 
     var s = Engine.crearSesion(cfg);
-    if (!s) { toast('No hay preguntas suficientes para ese test.'); return; }
+    if (!s) { toast(modo === 'examen' ? 'El simulacro necesita 40 preguntas (45 con reserva). Usa Test libre mientras tanto.' : 'No hay preguntas disponibles para ese test.', 4500); return; }
     sesion = s;
     avisosDados = {};
     marcaTiempo = Date.now();
@@ -609,7 +609,7 @@
       if (!lista.length) { $('#revision').innerHTML = '<div class="vacio">Nada que mostrar aquí.</div>'; return; }
       var hh = '';
       lista.forEach(function (d, idx) {
-        var p = Store.preguntaPorId(d.qid);
+        var p = d.pregunta || Store.preguntaPorId(d.qid);
         if (!p) return;
         var ops = d.orden.map(function (i) { return p.opciones[i]; });
         var cls = d.enBlanco ? 'blanco' : d.acertada ? 'bien' : 'mal';
@@ -643,7 +643,8 @@
   function lanzarConIds(ids, etiqueta) {
     var mapa = {};
     ids.forEach(function (i) { mapa[i] = true; });
-    var lista = Store.preguntas().filter(function (p) { return mapa[p.id]; });
+    var lista = Store.preguntas().filter(function (p) { return mapa[p.id] && p.activa !== false; });
+    if (!lista.length) { toast('Estas preguntas ya no están disponibles.'); return; }
     if (!lista.length) { toast('No quedan preguntas.'); return; }
     var barajarOps = Store.ajustes().barajarOpciones;
     sesion = {
@@ -654,7 +655,7 @@
       items: Engine.barajar(lista).map(function (p) {
         var orden = p.opciones.map(function (_, i) { return i; });
         if (barajarOps) orden = Engine.barajar(orden);
-        return { qid: p.id, orden: orden, respuesta: null, dudosa: false, tiempoMs: 0 };
+        return { qid: p.id, pregunta: JSON.parse(JSON.stringify(p)), orden: orden, respuesta: null, dudosa: false, tiempoMs: 0 };
       }),
       indice: 0, inicio: Date.now(), fin: null, pausadoMs: 0
     };
@@ -837,7 +838,7 @@
 
   function editorPregunta(id) {
     var p = id ? Store.preguntaPorId(id) : null;
-    var ops = p ? p.opciones.slice() : ['', '', ''];
+    var ops = p ? p.opciones.slice(0, 3) : ['', '', ''];
     while (ops.length < 3) ops.push('');
     var h = '<h3>' + (p ? 'Editar pregunta' : 'Nueva pregunta') + '</h3>';
     h += '<label class="campo"><span>Enunciado</span><textarea id="ed-enun" style="min-height:80px;font-family:inherit;font-size:14px">' + esc(p ? p.enunciado : '') + '</textarea></label>';
@@ -866,6 +867,7 @@
         referencia: $('#ed-ref').value,
         fuente: $('#ed-of').checked ? 'oficial' : 'propia'
       };
+      if (datos.opciones.some(function (o) { return !o.trim(); })) { toast('Completa las tres opciones.'); return; }
       var norm = Importer.normalizar(datos, 0, 0);
       if (!norm) { toast('Faltan el enunciado o alguna opción.'); return; }
       if (p) {
@@ -900,7 +902,11 @@
     var temaDef = Number($('#imp-tema').value) || 0;
     var res = Importer.detectarYParsear(texto, temaDef);
     var fuente = $('#imp-fuente').value;
-    res.preguntas.forEach(function (p) { p.fuente = fuente; });
+    res.preguntas.forEach(function (p) {
+      p.fuente = fuente;
+      p.documento = $('#imp-documento').value.trim() || p.documento;
+      p.versionPlantilla = $('#imp-version').value.trim() || p.versionPlantilla;
+    });
     pendientes = res.preguntas;
 
     var h = '';
@@ -912,14 +918,17 @@
       var sinTema = res.preguntas.filter(function (p) { return !p.tema; }).length;
       if (sinTema) h += '<div class="aviso-caja neutro">' + sinTema + ' se quedan sin tema. Elige un tema por defecto arriba y vuelve a analizar, o clasifícalas luego desde <em>Preguntas</em>.</div>';
       h += '<div class="tarjeta" style="background:var(--panel-2);max-height:340px;overflow:auto">';
-      res.preguntas.slice(0, 6).forEach(function (p) {
-        h += '<div class="revision-item"><div class="enun">' + esc(p.enunciado) + '</div><ul>';
+      res.preguntas.forEach(function (p) {
+        var anterior = Store.preguntas().find(function (q) { return q.huella === p.huella; });
+        h += '<div class="revision-item">' + (p.numeroOficial ? '<div class="sub">Número: ' + esc(p.numeroOficial) + '</div>' : '') +
+          (anterior ? '<div class="aviso-caja neutro">Ya existe. Respuesta guardada: ' + esc(anterior.opciones[anterior.correcta]) + '. Respuesta importada: ' + esc(p.opciones[p.correcta]) + '.</div>' : '') + '<div class="enun">' + esc(p.enunciado) + '</div><ul>';
         p.opciones.forEach(function (o, i) { h += '<li class="' + (i === p.correcta ? 'c' : '') + '">' + 'ABCDEF'.charAt(i) + ') ' + esc(o) + '</li>'; });
         h += '</ul><div class="sub" style="margin-top:6px">' + esc(tituloTema(p.tema)) + '</div></div>';
       });
-      if (res.preguntas.length > 6) h += '<div class="sub" style="text-align:center">…y ' + (res.preguntas.length - 6) + ' más</div>';
+      
       h += '</div>';
-      h += '<button class="btn pri ancho" id="imp-confirmar">Añadir ' + res.preguntas.length + ' preguntas al banco</button>';
+      if (fuente === 'oficial') h += '<label class="check"><input type="checkbox" id="imp-actualizar"> <span>Actualizar también las repetidas con los datos oficiales revisados (se conserva su identificador).</span></label>';
+      h += '<button class="btn pri ancho" id="imp-confirmar">Importar ' + res.preguntas.length + ' preguntas al banco</button>';
     }
     if (res.errores && res.errores.length) {
       h += '<details style="margin-top:12px"><summary style="cursor:pointer;color:var(--mal);font-size:13.5px">' +
@@ -929,11 +938,19 @@
     $('#imp-resultado').innerHTML = h;
     var bc = $('#imp-confirmar');
     if (bc) bc.onclick = function () {
-      var r = Store.anadirPreguntas(pendientes);
-      toast(r.nuevas + ' añadidas' + (r.duplicadas ? ', ' + r.duplicadas + ' ya las tenías' : ''), 4000);
+      var actualizar = !!($('#imp-actualizar') && $('#imp-actualizar').checked);
+      if (actualizar && pendientes.some(function (p) { return Store.preguntas().some(function (q) { return q.huella === p.huella; }); })) {
+        descargar('copia_antes_importacion_' + Date.now() + '.json', JSON.stringify(Store.exportarTodo(), null, 1));
+      }
+      var r = Store.anadirPreguntas(pendientes, { actualizarOficiales: actualizar });
+      toast(r.nuevas + ' añadidas, ' + r.actualizadas + ' actualizadas' + (r.duplicadas ? ', ' + r.duplicadas + ' ya las tenías' : ''), 4000);
       $('#imp-texto').value = '';
       $('#imp-resultado').innerHTML = '<div class="aviso-caja ok"><strong>Listo.</strong> ' + r.nuevas +
-        ' preguntas nuevas en el banco' + (r.duplicadas ? ' (' + r.duplicadas + ' repetidas descartadas)' : '') + '.</div>';
+        ' preguntas nuevas en el banco, ' + r.actualizadas + ' actualizadas' + (r.duplicadas ? ' (' + r.duplicadas + ' repetidas descartadas)' : '') + '.</div>' +
+        (r.actualizadas ? '<button class="btn" id="imp-copia-previa">Exportar copia anterior a la actualización</button>' : '');
+      if ($('#imp-copia-previa')) $('#imp-copia-previa').onclick = function () {
+        descargar('copia_antes_importacion.json', JSON.stringify(Store.copiaAntesImportacion(), null, 1));
+      };
       pendientes = null;
     };
   }
@@ -950,9 +967,9 @@
       '*b) La reacción en cadena\n' +
       'c) El calor\n';
     var csv = 'enunciado,a,b,c,correcta,tema\n"¿Qué clase de fuego es el de metales?","Clase C","Clase D","Clase F",B,6';
-    var json = '[{"tema":6,"enunciado":"...","opciones":["...","...","..."],"correcta":1,"explicacion":"..."}]';
+    var json = '[{"tema":6,"enunciado":"...","opciones":["...","...","..."],"correcta":"B","explicacion":"..."}]';
     modal('<h3>Formatos que entiende</h3>' +
-      '<p class="sub">Pega lo que te den. Si el formato es raro, avísame y lo adapto.</p>' +
+      '<p class="sub">Se requieren tres opciones completas y una respuesta correcta. En JSON usa letras A, B o C, o indica correcta_base: 0 para índices. Revisa todas las preguntas antes de importar.</p>' +
       '<p style="font-weight:600;font-size:13px;margin:14px 0 4px">Texto normal de test</p>' +
       '<pre style="background:var(--panel-2);padding:11px;border-radius:8px;font-size:12px;overflow:auto">' + esc(txt) + '</pre>' +
       '<p class="sub">La correcta puede ir como <code>Respuesta: b</code>, con un asterisco delante de la opción, o en una lista final tipo <code>SOLUCIONES: 1-B 2-C</code>. Las líneas <code>TEMA 6</code> cambian el tema de lo que viene detrás.</p>' +
@@ -975,6 +992,41 @@
   function puenteAndroid() {
     return (typeof window.AndroidApp !== 'undefined' && window.AndroidApp &&
       typeof window.AndroidApp.guardarFichero === 'function') ? window.AndroidApp : null;
+  }
+
+  /* iPhone y iPad: en Safari el atributo "download" no guarda nada (abre una
+     vista previa) y dentro de la app instalada en la pantalla de inicio no
+     hace absolutamente nada. Ahi el fichero se pasa a la hoja de compartir
+     del sistema, que si deja llevarlo a Archivos, a iCloud o a donde sea. */
+  function esIOS() {
+    var ua = navigator.userAgent || '';
+    if (/iPad|iPhone|iPod/.test(ua)) return true;
+    // iPadOS se presenta como Mac de escritorio, pero con pantalla tactil.
+    return navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+  }
+
+  /* Ya instalada en la pantalla de inicio o como aplicacion del navegador. */
+  function enStandalone() {
+    if (navigator.standalone) return true;
+    try { return window.matchMedia('(display-mode: standalone)').matches; }
+    catch (e) { return false; }
+  }
+
+  /* Devuelve true si ha conseguido lanzar la hoja de compartir. */
+  function compartirFichero(nombre, contenido) {
+    if (!navigator.share || !navigator.canShare || typeof File === 'undefined') return false;
+    var fichero;
+    try {
+      fichero = new File([contenido], nombre, { type: 'application/json' });
+      if (!navigator.canShare({ files: [fichero] })) return false;
+    } catch (e) { return false; }
+    navigator.share({ files: [fichero], title: nombre }).then(function () {
+      toast('Elige "Guardar en Archivos" para conservar la copia.', 4500);
+    }).catch(function (err) {
+      if (err && err.name === 'AbortError') return;   // lo ha cancelado el usuario
+      copiaManual(nombre, contenido, 'No se ha podido compartir el fichero. Copia el texto y guárdalo tú:');
+    });
+    return true;
   }
 
   function copiaManual(nombre, contenido, motivo) {
@@ -1012,6 +1064,7 @@
         'Copia este texto y guárdalo como ' + nombre + ', o abre la app en su propia pestaña.');
       return;
     }
+    if (esIOS() && compartirFichero(nombre, contenido)) return;
     try {
       var blob = new Blob([contenido], { type: 'application/json;charset=utf-8' });
       var url = URL.createObjectURL(blob);
@@ -1079,7 +1132,22 @@
         promptInstalar.prompt();
         promptInstalar.userChoice.then(function () { promptInstalar = null; pintarAjustes(); });
       };
-    } else ins.innerHTML = '';
+    } else if (enStandalone()) {
+      ins.innerHTML = '<div class="aviso-caja ok" style="margin-top:10px">' +
+        'Ya la tienes instalada en este dispositivo.</div>';
+    } else if (esIOS()) {
+      ins.innerHTML = '<div class="aviso-caja neutro" style="margin-top:10px">' +
+        '<strong>Instalar en iPhone o iPad</strong><br>' +
+        'Abre esta página en <strong>Safari</strong>, toca el botón Compartir ' +
+        '(el cuadrado con la flecha hacia arriba) y elige ' +
+        '<strong>Añadir a pantalla de inicio</strong>. Se abrirá a pantalla ' +
+        'completa, sin barra de navegador, y seguirá funcionando sin conexión.</div>';
+    } else {
+      ins.innerHTML = '<div class="aviso-caja neutro" style="margin-top:10px">' +
+        '<strong>Instalar en este dispositivo</strong><br>' +
+        'Abre el menú del navegador y busca <strong>Instalar aplicación</strong> o ' +
+        '<strong>Añadir a pantalla de inicio</strong>.</div>';
+    }
   }
 
   /* ================= eventos ================= */
@@ -1200,6 +1268,10 @@
 
     // importar
     $('#imp-analizar').onclick = analizarImportacion;
+    ['#imp-texto', '#imp-tema', '#imp-fuente', '#imp-documento', '#imp-version'].forEach(function (selector) {
+      $(selector).addEventListener('input', function () { pendientes = null; $('#imp-resultado').innerHTML = ''; });
+      $(selector).addEventListener('change', function () { pendientes = null; $('#imp-resultado').innerHTML = ''; });
+    });
     $('#imp-ejemplo').onclick = ejemplosFormato;
     $('#imp-fichero').onchange = function () {
       leerFichero(this, function (txt, nombre) {
@@ -1211,6 +1283,11 @@
     $('#exp-todo').onclick = function () {
       descargar('copia_c1_bomberos_' + new Date().toISOString().slice(0, 10) + '.json',
         JSON.stringify(Store.exportarTodo(), null, 1));
+    };
+    $('#exp-previa').onclick = function () {
+      var copia = Store.copiaAntesImportacion();
+      if (!copia) { toast('Todavía no hay una actualización oficial con copia previa.'); return; }
+      descargar('copia_antes_importacion.json', JSON.stringify(copia, null, 1));
     };
     $('#exp-banco').onclick = function () {
       descargar('banco_c1_bomberos.json', JSON.stringify(Store.exportarBanco(), null, 1));
@@ -1258,13 +1335,16 @@
       if ($('#v-ajustes').classList.contains('activa')) pintarAjustes();
     });
 
+    window.addEventListener('c1-guardado-fallido', function () { toast('No se ha podido guardar el progreso. Exporta una copia antes de cerrar.', 8000); });
+    document.addEventListener('visibilitychange', function () { if (document.hidden) window.__guardar(); });
+    window.addEventListener('pagehide', function () { window.__guardar(); });
     window.addEventListener('beforeunload', function (e) {
       if (sesion) {
         acumularTiempo();
         Store.ponerEnCurso(sesion);
         Store.guardarAhora();
         e.preventDefault(); e.returnValue = '';
-      }
+      } else Store.guardarAhora();
     });
 
     var reajuste;
