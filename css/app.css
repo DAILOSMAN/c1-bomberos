@@ -322,7 +322,8 @@ textarea { min-height: 150px; font-family: ui-monospace, SFMono-Regular, Menlo, 
 .aviso-caja.neutro { background: var(--panel-2); border-left: 3px solid var(--borde); }
 
 #toast {
-  position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(80px);
+  position: fixed; left: 50%; transform: translateX(-50%) translateY(80px);
+  bottom: 24px; bottom: calc(24px + env(safe-area-inset-bottom));
   background: var(--txt); color: var(--panel); padding: 11px 18px; border-radius: 22px;
   font-size: 14px; z-index: 100; opacity: 0; transition: .25s; pointer-events: none;
   box-shadow: var(--sombra-alta); max-width: 90vw; text-align: center;
@@ -338,14 +339,16 @@ textarea { min-height: 150px; font-family: ui-monospace, SFMono-Regular, Menlo, 
 .modal-fondo.ver { display: flex; }
 .modal {
   background: var(--panel); border-radius: var(--radio); padding: 20px;
-  max-width: 520px; width: 100%; max-height: 85vh; overflow-y: auto;
+  max-width: 520px; width: 100%; overflow-y: auto;
+  max-height: 85vh; max-height: 85dvh;
   box-shadow: var(--sombra-alta);
 }
 .modal h3 { margin: 0 0 10px; font-size: 17px; text-transform: none; letter-spacing: 0; color: var(--txt); }
 
 /* ---------- pie ---------- */
 
-.pie { text-align: center; color: var(--txt-sec); font-size: 12px; padding: 20px 16px 40px; line-height: 1.7; }
+.pie { text-align: center; color: var(--txt-sec); font-size: 12px; line-height: 1.7;
+  padding: 20px 16px 40px; padding-bottom: calc(40px + env(safe-area-inset-bottom)); }
 .pie strong { color: var(--txt); font-size: 13px; letter-spacing: .01em; }
 
 /* ---------- movil ---------- */
